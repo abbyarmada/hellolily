@@ -6,7 +6,7 @@ from faker.factory import Factory
 from lily.tenant.factories import TenantFactory
 from lily.utils.models.factories import PhoneNumberFactory
 
-from .models import Account, AccountStatus
+from .models import Account, AccountStatus, Website
 
 faker = Factory.create('nl_NL')
 
@@ -42,3 +42,12 @@ class AccountFactory(DjangoModelFactory):
 
     class Meta:
         model = Account
+
+
+class WebsiteFactory(DjangoModelFactory):
+    tenant = SubFactory(TenantFactory)
+    account = SubFactory(AccountFactory, tenant=SelfAttribute('..tenant'))
+    website = LazyAttribute(lambda o: faker.url())
+
+    class Meta:
+        model = Website
