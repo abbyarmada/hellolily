@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 import os
-import sys
 from urlparse import urlparse, uses_netloc
 
 from django.conf import global_settings
