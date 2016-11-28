@@ -21,7 +21,7 @@ dist-packages/
 yarn.lock
 .ipython/
 
-celerybeat-schedule
+celerybeat-schedule.*
 celeryev.pid
 docker-compose.local.yml
 
