@@ -6,6 +6,7 @@ import freemail
 from lily.accounts.models import Website
 from lily.utils.functions import parse_phone_number
 from lily.utils.views.mixins import LoginRequiredMixin
+from lily.search.functions import search_number
 
 from .lily_search import LilySearch
 
@@ -233,41 +234,6 @@ class PhoneNumberSearchView(LoginRequiredMixin, View):
             # In the future we might change how we handle phone numbers.
             number = parse_phone_number(number)
 
-        results = self._search_number(number)
+        results = search_number(self.request.user.tenant_id, number)
 
         return HttpResponse(anyjson.dumps(results), content_type='application/json; charset=utf-8')
-
-    def _search_number(self, number):
-        search = LilySearch(
-            tenant_id=self.request.user.tenant_id,
-            model_type='accounts_account',
-            size=1,
-        )
-
-        # Try to find an account with the given phone number.
-        search.filter_query('phone_numbers.number:"%s"' % number)
-
-        hits, facets, total, took = search.do_search()
-        if hits:
-            return {
-                'data': hits[0],
-            }
-        else:
-            search = LilySearch(
-                tenant_id=self.request.user.tenant_id,
-                model_type='contacts_contact',
-                size=1,
-            )
-
-            # Try to find a contact with the given phone number.
-            search.filter_query('phone_numbers.number:"%s"' % number)
-
-            hits, facets, total, took = search.do_search()
-            if hits:
-                if hits[0].get('accounts'):
-                    # If the contact has accounts, return the first one.
-                    return {
-                        'data': hits[0].get('accounts')[0],
-                    }
-
-        return {}

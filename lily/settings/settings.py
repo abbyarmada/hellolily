@@ -52,6 +52,27 @@ DATABASES = {
 SITE_ID = os.environ.get('SITE_ID', 1)
 
 #######################################################################################################################
+# DJANGO CHANNELS                                                                                                     #
+#######################################################################################################################
+
+uses_netloc.append('redis')
+
+REDIS_ENV = os.environ.get('REDIS_PROVIDER_ENV', 'REDIS_DEV_URL')
+REDIS_URL = os.environ.get(REDIS_ENV, 'redis://redis:6379')
+REDIS = urlparse(REDIS_URL)
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "asgi_redis.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [REDIS_URL],
+        },
+        "ROUTING": "lily.routing.channel_routing",
+    },
+}
+
+
+#######################################################################################################################
 # LOCALIZATION                                                                                                        #
 #######################################################################################################################
 TIME_ZONE = 'Europe/Amsterdam'
@@ -251,6 +272,7 @@ INSTALLED_APPS = (
     'activelink',
     'bootstrap3',
     'django_extensions',
+    'channels',
     'collectfast',
     'protractor',
     'templated_email',
@@ -455,11 +477,6 @@ else:
 #######################################################################################################################
 # CACHING CONFIG                                                                                                      #
 #######################################################################################################################
-uses_netloc.append('redis')
-
-REDIS_ENV = os.environ.get('REDIS_PROVIDER_ENV', 'REDIS_DEV_URL')
-REDIS_URL = os.environ.get(REDIS_ENV, 'redis://redis:6379')
-REDIS = urlparse(REDIS_URL)
 
 if DEBUG:
     CACHES = {
