@@ -41,6 +41,15 @@ class AccountFactory(DjangoModelFactory):
             phone_number = PhoneNumberFactory(tenant=self.tenant, number=phone_str)
             self.phone_numbers.add(phone_number)
 
+    @factory.post_generation
+    def websites(self, create, extracted, **kwargs):
+
+        if not create:
+            return
+
+        size = extracted.get('size', 1) if extracted else 1
+        WebsiteFactory.create_batch(size=size, account=self, tenant=self.tenant)
+
     class Meta:
         model = Account
 

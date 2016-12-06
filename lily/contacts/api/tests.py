@@ -1,6 +1,6 @@
 from rest_framework import status
 
-from lily.accounts.factories import AccountFactory, AccountStatusFactory, WebsiteFactory
+from lily.accounts.factories import AccountFactory, AccountStatusFactory
 from lily.accounts.models import Account
 from lily.contacts.api.serializers import ContactSerializer
 from lily.contacts.factories import ContactFactory, FunctionFactory
@@ -43,10 +43,6 @@ class ContactTests(GenericAPITestCase):
                 obj.email_addresses.add(EmailAddressFactory(tenant=obj.tenant))
                 obj.functions.add(FunctionFactory(tenant=obj.tenant, contact=obj))
                 obj.tags.add(TagFactory(tenant=obj.tenant, subject=obj))
-
-                accounts = [f.account for f in obj.functions.all()]
-                for account in accounts:
-                    WebsiteFactory.create_batch(size=2, account=account, tenant=obj.tenant)
 
         if size > 1:
             return object_list
@@ -175,20 +171,20 @@ class ContactTests(GenericAPITestCase):
         Test that with the creation of a contact, the website field of a related account is untouched.
         """
         # Create a new contact. It also creates a related account with connected websites, used in this test case.
-        self._create_object(with_relations=True)
-        account_pk = Account.objects.first().pk
-        websites_before = list(Account.objects.get(id=account_pk).websites.all())
+        contact = self._create_object(with_relations=True)
+        account = contact.accounts.prefetch_related('websites').first()
+        websites_before = list(account.websites.all())
 
         # Create a new contact and connect it to an existing account.
         contact = self._create_object_stub(with_relations=True)
-        contact['accounts'] = [{'id': account_pk}, ]
+        contact['accounts'] = [{'id': account.pk}, ]
 
         # Perform normal create.
         request = self.user.post(self.get_url(self.list_url), contact)
         self.assertStatus(request, status.HTTP_201_CREATED, contact)
 
         # Verify that the websites of the related account are the same as before the contact creation.
-        websites_after = list(Account.objects.get(id=account_pk).websites.all())
+        websites_after = list(Account.objects.get(id=account.pk).websites.all())
         self.assertListEqual(websites_before, websites_after)
 
     def test_update_object_validation(self):
